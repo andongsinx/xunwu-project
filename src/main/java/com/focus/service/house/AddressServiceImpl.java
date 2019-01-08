@@ -1,5 +1,6 @@
 package com.focus.service.house;
 
+import com.focus.entity.House;
 import com.focus.entity.Subway;
 import com.focus.entity.SubwayStation;
 import com.focus.entity.SupportAddress;
@@ -7,6 +8,7 @@ import com.focus.repository.SubwayRepository;
 import com.focus.repository.SubwayStationRepository;
 import com.focus.repository.SupportAddressRepository;
 import com.focus.service.ServiceMultiResult;
+import com.focus.service.ServiceResult;
 import com.focus.web.dto.SubwayDTO;
 import com.focus.web.dto.SubwayStationDTO;
 import com.focus.web.dto.SupportAddressDTO;
@@ -15,10 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @Description：
@@ -95,5 +94,28 @@ public class AddressServiceImpl implements IAddressService {
         map.put(SupportAddress.Level.CITY, modelMapper.map(city, SupportAddressDTO.class));
         map.put(SupportAddress.Level.REGION, modelMapper.map(region, SupportAddressDTO.class));
         return map;
+    }
+
+    @Override
+    public ServiceResult<SubwayDTO> findSubway(Long subwayLineId) {
+
+        Optional<Subway> optional = subwayRepository.findById(subwayLineId);
+        Subway subway = optional.get();
+        if (subway == null) {
+            return new ServiceResult<>(false);
+        }
+        SubwayDTO subwayDTO = modelMapper.map(subway, SubwayDTO.class);
+        return new ServiceResult<>(true, null, subwayDTO);
+    }
+
+    @Override
+    public ServiceResult<SubwayStationDTO> findSubwayStation(Long subwayStationId) {
+        Optional<SubwayStation> optional = subwayStationRepository.findById(subwayStationId);
+        SubwayStation subwayStation = optional.get();
+        if (subwayStation == null) {
+            return new ServiceResult<>(false);
+        }
+        SubwayStationDTO subwayStationDTO = modelMapper.map(subwayStation, SubwayStationDTO.class);
+        return new ServiceResult<>(true, null, subwayStationDTO);
     }
 }

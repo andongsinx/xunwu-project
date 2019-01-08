@@ -54,6 +54,9 @@ public class HouseServiceImpl implements IHouseService {
     private HousePictureRepository housePictureRepository;
 
     @Autowired
+    private HouseSubscribeRepository subscribeRepository;
+
+    @Autowired
     private ModelMapper modelMapper;
 
     @Value("${qiniu.cdn.prefix}")
@@ -90,7 +93,7 @@ public class HouseServiceImpl implements IHouseService {
         houseDTO.setHouseDetail(houseDetailDTO);
 
         houseDTO.setCover(this.cdnPrefix + houseDTO.getCover());
-        int a = 1/0;
+        int a = 1 / 0;
 
         List<String> tags = houseForm.getTags();
         List<HouseTag> houseTags = new ArrayList<>();
@@ -107,10 +110,10 @@ public class HouseServiceImpl implements IHouseService {
     @Override
     public ServiceMultiResult<HouseDTO> queryAdmin(DataTableSearch searchBody) {
         List<HouseDTO> houseDTOS = new ArrayList<>();
-        Sort sort = new Sort(Sort.Direction.fromString(searchBody.getDirection()),searchBody.getOrderBy());
-        int page= searchBody.getStart() / searchBody.getLength();
+        Sort sort = new Sort(Sort.Direction.fromString(searchBody.getDirection()), searchBody.getOrderBy());
+        int page = searchBody.getStart() / searchBody.getLength();
 
-        Pageable pageable = PageRequest.of(page,searchBody.getLength(),sort);
+        Pageable pageable = PageRequest.of(page, searchBody.getLength(), sort);
         Specification<House> specification = (root, query, cb) -> {
             Predicate predicate = cb.equal(root.get("adminId"), UserLoginUtil.getLoginUserId());
             predicate = cb.and(predicate, cb.notEqual(root.get("status"), HouseStatus.DELETED.getValue()));
@@ -147,6 +150,44 @@ public class HouseServiceImpl implements IHouseService {
 
         return new ServiceMultiResult<>(houses.getTotalElements(), houseDTOS);
 
+    }
+
+    @Override
+    public ServiceResult<HouseDTO> findCompleteOne(Long id) {
+        House house = houseRepository.findById(id).get();
+        if (house == null) {
+            return ServiceResult.notFound();
+        }
+
+        HouseDetail detail = houseDetailRepository.findByHouseId(id);
+        List<HousePicture> pictures = housePictureRepository.findAllByHouseId(id);
+
+        HouseDetailDTO detailDTO = modelMapper.map(detail, HouseDetailDTO.class);
+        List<HousePictureDTO> pictureDTOS = new ArrayList<>();
+        for (HousePicture picture : pictures) {
+            HousePictureDTO pictureDTO = modelMapper.map(picture, HousePictureDTO.class);
+            pictureDTOS.add(pictureDTO);
+        }
+
+
+        List<HouseTag> tags = houseTagRepository.findAllByHouseId(id);
+        List<String> tagList = new ArrayList<>();
+        for (HouseTag tag : tags) {
+            tagList.add(tag.getName());
+        }
+
+        HouseDTO result = modelMapper.map(house, HouseDTO.class);
+        result.setHouseDetail(detailDTO);
+        result.setPictures(pictureDTOS);
+        result.setTags(tagList);
+
+        if (UserLoginUtil.getLoginUserId() > 0) { // 已登录用户
+            HouseSubscribe subscribe = subscribeRepository.findByHouseIdAndUserId(house.getId(), (long) UserLoginUtil.getLoginUserId());
+            if (subscribe != null) {
+                result.setSubscribeStatus(subscribe.getStatus());
+            }
+        }
+        return ServiceResult.of(result);
     }
 
     /**

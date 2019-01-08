@@ -26,4 +26,11 @@ public interface IHouseService {
      * @return
      */
     ServiceMultiResult<HouseDTO> queryAdmin(DataTableSearch searchBody);
+
+    /**
+     * 通过id查询详细信息
+     * @param id
+     * @return
+     */
+    ServiceResult<HouseDTO> findCompleteOne(Long id);
 }

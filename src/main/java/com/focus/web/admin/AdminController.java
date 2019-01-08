@@ -2,6 +2,8 @@ package com.focus.web.admin;
 
 import com.focus.base.ApiDataTableResponse;
 import com.focus.base.ApiResponse;
+import com.focus.entity.HouseDetail;
+import com.focus.entity.Subway;
 import com.focus.service.ServiceMultiResult;
 import com.focus.web.form.DataTableSearch;
 import com.focus.entity.SupportAddress;
@@ -18,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -184,6 +187,37 @@ public class AdminController {
         response.setRecordsTotal(result.getTotal());
         response.setRecordsFiltered(result.getTotal());
         return response;
+    }
+
+    /**
+     * 房屋编辑页面
+     *
+     * @return
+     */
+    @GetMapping("admin/house/edit")
+    public String houseEditPage(@RequestParam("id") Long id, Model model) {
+        if (id == null || id < 0) {
+            return "404";
+        }
+
+        ServiceResult<HouseDTO> serviceResult = houseService.findCompleteOne(id);
+        HouseDTO result = serviceResult.getResult();
+        model.addAttribute("house", result);
+        Map<SupportAddress.Level, SupportAddressDTO> addressMap = addressService.findCityAndRegion(result.getCityEnName(), result.getRegionEnName());
+        model.addAttribute("city", addressMap.get(SupportAddress.Level.CITY));
+        model.addAttribute("region", addressMap.get(SupportAddress.Level.REGION));
+        HouseDetailDTO houseDetail = result.getHouseDetail();
+        ServiceResult<SubwayDTO> subway = addressService.findSubway(houseDetail.getSubwayLineId());
+        if(subway.isSuccess()){
+            model.addAttribute("subway",subway.getResult());
+        }
+        ServiceResult<SubwayStationDTO> subwayStation = addressService.findSubwayStation(houseDetail.getSubwayStationId());
+        if(subwayStation.isSuccess()){
+            model.addAttribute("station",subwayStation.getResult());
+        }
+
+        return "admin/house-edit";
+
     }
 
 

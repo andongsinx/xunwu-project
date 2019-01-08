@@ -2,6 +2,7 @@ package com.focus.service.house;
 
 import com.focus.entity.SupportAddress;
 import com.focus.service.ServiceMultiResult;
+import com.focus.service.ServiceResult;
 import com.focus.web.dto.SubwayDTO;
 import com.focus.web.dto.SubwayStationDTO;
 import com.focus.web.dto.SupportAddressDTO;
@@ -49,4 +50,18 @@ public interface IAddressService {
      * @return
      */
     Map<SupportAddress.Level, SupportAddressDTO> findCityAndRegion(String cityEnName, String regionEnName);
+
+    /**
+     * 更具subway id查询
+     * @param subwayLineId
+     * @return
+     */
+    ServiceResult<SubwayDTO> findSubway(Long subwayLineId);
+
+    /**
+     * 根据subwaystation id查询
+     * @param subwayStationId
+     * @return
+     */
+    ServiceResult<SubwayStationDTO> findSubwayStation(Long subwayStationId);
 }

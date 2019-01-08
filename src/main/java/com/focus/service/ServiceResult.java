@@ -1,5 +1,7 @@
 package com.focus.service;
 
+import com.focus.web.dto.HouseDTO;
+
 /**
  * @Description： 服务接口通用结构
  * @Author: shadow
@@ -22,6 +24,7 @@ public class ServiceResult<T> {
         this.message = message;
     }
 
+
     public ServiceResult(boolean success, String message, T result) {
         this.success = success;
         this.message = message;
@@ -30,6 +33,14 @@ public class ServiceResult<T> {
 
     public static ServiceResult ofMessage(Message message){
         return new ServiceResult(false,message.getValue());
+    }
+
+    public static ServiceResult<HouseDTO> notFound() {
+        return new ServiceResult<>(false,"data not found!",null);
+    }
+
+    public static ServiceResult of(Object result) {
+        return new ServiceResult(true,null,result);
     }
 
     public boolean isSuccess() {
