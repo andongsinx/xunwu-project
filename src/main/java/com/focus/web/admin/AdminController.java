@@ -1,14 +1,15 @@
 package com.focus.web.admin;
 
+import com.focus.base.ApiDataTableResponse;
 import com.focus.base.ApiResponse;
+import com.focus.service.ServiceMultiResult;
+import com.focus.web.form.DataTableSearch;
 import com.focus.entity.SupportAddress;
 import com.focus.service.ServiceResult;
 import com.focus.service.file.IFileService;
 import com.focus.service.house.IAddressService;
 import com.focus.service.house.IHouseService;
-import com.focus.web.dto.HouseDTO;
-import com.focus.web.dto.QiNiuPutRet;
-import com.focus.web.dto.SupportAddressDTO;
+import com.focus.web.dto.*;
 import com.focus.web.form.HouseForm;
 import com.google.gson.Gson;
 import com.qiniu.common.QiniuException;
@@ -157,10 +158,33 @@ public class AdminController {
     }
 
 
+    /**
+     * 房源列表页
+     *
+     * @return
+     */
     @GetMapping("admin/house/list")
-    public String houseListPage(){
+    public String houseListPage() {
         return "admin/house-list";
-
     }
+
+
+    /**
+     * 获取房源列表接口
+     *
+     * @return
+     */
+    @PostMapping("admin/houses")
+    @ResponseBody
+    public ApiDataTableResponse houses(@ModelAttribute("searchBody") DataTableSearch searchBody) {
+        ServiceMultiResult<HouseDTO> result = houseService.queryAdmin(searchBody);
+        ApiDataTableResponse response = new ApiDataTableResponse(ApiResponse.Status.SUCCESS);
+        response.setData(result.getResult());
+        response.setDraw(searchBody.getDraw());
+        response.setRecordsTotal(result.getTotal());
+        response.setRecordsFiltered(result.getTotal());
+        return response;
+    }
+
 
 }

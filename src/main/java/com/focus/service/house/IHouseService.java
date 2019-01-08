@@ -1,7 +1,9 @@
 package com.focus.service.house;
 
+import com.focus.service.ServiceMultiResult;
 import com.focus.service.ServiceResult;
 import com.focus.web.dto.HouseDTO;
+import com.focus.web.form.DataTableSearch;
 import com.focus.web.form.HouseForm;
 
 /**
@@ -11,6 +13,17 @@ import com.focus.web.form.HouseForm;
  */
 public interface IHouseService {
 
+    /**
+     * 新增房源
+     * @param houseForm
+     * @return
+     */
     ServiceResult<HouseDTO> save(HouseForm houseForm);
 
+    /**
+     * 查询房源列表
+     * @param searchBody
+     * @return
+     */
+    ServiceMultiResult<HouseDTO> queryAdmin(DataTableSearch searchBody);
 }

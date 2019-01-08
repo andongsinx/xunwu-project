@@ -1,4 +1,4 @@
-package com.focus.security;
+package com.focus.base;
 
 import com.focus.entity.User;
 import org.springframework.security.core.Authentication;
@@ -17,6 +17,6 @@ public class UserLoginUtil {
             User user = (User) authentication.getPrincipal();
             return user.getId().intValue();
         }
-        throw new RuntimeException("user not login！");
+        return -1;
     }
 }
