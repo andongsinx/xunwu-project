@@ -12,4 +12,8 @@ import java.util.List;
  */
 public interface HouseTagRepository extends JpaRepository<HouseTag, Long> {
     List<HouseTag> findAllByHouseId(Long id);
+
+    HouseTag findByHouseIdAndName(Long houseId, String tag);
+
+    void deleteByHouseIdAndName(Long houseId, String tag);
 }
