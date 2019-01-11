@@ -201,7 +201,7 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
         <configuration>
-          <mainClass>com.andong.Application</mainClass>
+          <mainClass>com.focus.Application</mainClass>
           <executable>true</executable>
         </configuration>
       </plugin>
@@ -235,8 +235,8 @@
                 <rule>
                   <element>CLASS</element>
                   <includes>
-                    <include>com.andong.service.*.*</include>
-                    <include>com.andong.repository.*</include>
+                    <include>com.focus.service.*.*</include>
+                    <include>com.focus.repository.*</include>
                   </includes>
                   <limits>
                     <limit>

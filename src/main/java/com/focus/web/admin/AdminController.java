@@ -16,11 +16,13 @@ import com.focus.web.form.HouseForm;
 import com.google.gson.Gson;
 import com.qiniu.common.QiniuException;
 import com.qiniu.http.Response;
+import org.apache.kafka.common.requests.ApiError;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -208,15 +210,110 @@ public class AdminController {
         model.addAttribute("region", addressMap.get(SupportAddress.Level.REGION));
         HouseDetailDTO houseDetail = result.getHouseDetail();
         ServiceResult<SubwayDTO> subway = addressService.findSubway(houseDetail.getSubwayLineId());
-        if(subway.isSuccess()){
-            model.addAttribute("subway",subway.getResult());
+        if (subway.isSuccess()) {
+            model.addAttribute("subway", subway.getResult());
         }
         ServiceResult<SubwayStationDTO> subwayStation = addressService.findSubwayStation(houseDetail.getSubwayStationId());
-        if(subwayStation.isSuccess()){
-            model.addAttribute("station",subwayStation.getResult());
+        if (subwayStation.isSuccess()) {
+            model.addAttribute("station", subwayStation.getResult());
         }
 
         return "admin/house-edit";
+
+    }
+
+    /**
+     * 房源编辑接口
+     *
+     * @param houseForm
+     * @return
+     */
+    @PostMapping("admin/house/edit")
+    @ResponseBody
+    public ApiResponse saveHouse(@Valid @ModelAttribute("form-house-edit") HouseForm houseForm, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), bindingResult.getAllErrors().get(0).getDefaultMessage(), null);
+        }
+        Map<SupportAddress.Level, SupportAddressDTO> map = addressService.findCityAndRegion(houseForm.getCityEnName(), houseForm.getRegionEnName());
+        if (map.keySet().size() != 2) {
+            return ApiResponse.ofStatus(ApiResponse.Status.NOT_VALID_PARAM);
+        }
+
+        ServiceResult<HouseDTO> result = houseService.update(houseForm);
+        if (result.isSuccess()) {
+            return ApiResponse.ofSuccess(null);
+        }
+
+        ApiResponse response = ApiResponse.ofStatus(ApiResponse.Status.NOT_VALID_PARAM);
+        response.setMessage(response.getMessage());
+        return response;
+    }
+
+    /**
+     * 移除图片接口
+     *
+     * @return
+     */
+    @DeleteMapping("admin/house/photo")
+    @ResponseBody
+    public ApiResponse removePicture(@RequestParam("id") Long id) {
+        ServiceResult result = houseService.removeHousePhoto(id);
+        if (result.isSuccess()) {
+            return ApiResponse.ofStatus(ApiResponse.Status.SUCCESS);
+        }
+        return ApiResponse.ofMessage(HttpStatus.BAD_REQUEST.value(), result.getMessage());
+    }
+
+
+    /**
+     * 修改封面接口
+     *
+     * @return
+     */
+    @PostMapping("admin/house/cover")
+    @ResponseBody
+    public ApiResponse updateCover(@RequestParam("cover_id") Long coverId, @RequestParam("target_id") long targetId) {
+        ServiceResult result = houseService.updateCover(coverId, targetId);
+        if (result.isSuccess()) {
+            return ApiResponse.ofStatus(ApiResponse.Status.SUCCESS);
+        }
+        return ApiResponse.ofMessage(HttpStatus.BAD_REQUEST.value(), result.getMessage());
+    }
+
+    /**
+     * 添加房屋标签接口
+     *
+     * @return
+     */
+    @PostMapping("admin/house/tag")
+    @ResponseBody
+    public ApiResponse addHouseTag(@RequestParam("house_id") Long houseId, @RequestParam("tag") String tag) {
+        if (houseId < 0 || StringUtils.isEmpty(tag)) {
+            return ApiResponse.ofStatus(ApiResponse.Status.BAD_REQUEST);
+        }
+        ServiceResult result = houseService.addHouseTag(houseId, tag);
+        if (result.isSuccess()) {
+            return ApiResponse.ofStatus(ApiResponse.Status.SUCCESS);
+        }
+        return ApiResponse.ofMessage(HttpStatus.BAD_REQUEST.value(), result.getMessage());
+    }
+
+    /**
+     * 移除房屋标签接口
+     *
+     * @return
+     */
+    @DeleteMapping("admin/house/tag")
+    @ResponseBody
+    public ApiResponse removeHouseTag(@RequestParam("house_id") Long houseId, @RequestParam("tag") String tag) {
+        if (houseId < 0 || tag == null) {
+            return ApiResponse.ofStatus(ApiResponse.Status.BAD_REQUEST);
+        }
+        ServiceResult result = houseService.removeHouseTag(houseId, tag);
+        if (result.isSuccess()) {
+            return ApiResponse.ofStatus(ApiResponse.Status.SUCCESS);
+        }
+        return ApiResponse.ofMessage(HttpStatus.BAD_REQUEST.value(), result.getMessage());
 
     }
 
