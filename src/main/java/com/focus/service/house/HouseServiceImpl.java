@@ -1,5 +1,6 @@
 package com.focus.service.house;
 
+import com.focus.base.HouseSort;
 import com.focus.base.HouseStatus;
 import com.focus.base.UserLoginUtil;
 import com.focus.entity.*;
@@ -13,6 +14,8 @@ import com.focus.web.dto.HousePictureDTO;
 import com.focus.web.form.DataTableSearch;
 import com.focus.web.form.HouseForm;
 import com.focus.web.form.PhotoForm;
+import com.focus.web.form.RentSearch;
+import com.google.common.collect.Maps;
 import com.qiniu.common.QiniuException;
 import com.qiniu.http.Response;
 import org.modelmapper.ModelMapper;
@@ -25,10 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import javax.persistence.criteria.Predicate;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * @Description：
@@ -288,11 +288,16 @@ public class HouseServiceImpl implements IHouseService {
     @Transactional
     public ServiceResult removeHouseTag(Long houseId, String tag) {
         HouseTag houseTag = houseTagRepository.findByHouseIdAndName(houseId, tag);
-        if(houseTag == null){
+        if (houseTag == null) {
             return ServiceResult.notFound();
         }
-        houseTagRepository.deleteByHouseIdAndName(houseId,tag);
+        houseTagRepository.deleteByHouseIdAndName(houseId, tag);
         return new ServiceResult(true);
+    }
+
+    @Override
+    public ServiceMultiResult<HouseDTO> query(RentSearch rentSearch) {
+        return simpleQuery(rentSearch);
     }
 
     /**
@@ -352,4 +357,70 @@ public class HouseServiceImpl implements IHouseService {
         return null;
     }
 
+
+    private ServiceMultiResult<HouseDTO> simpleQuery(RentSearch rentSearch) {
+        Sort sort = HouseSort.generateSort(rentSearch.getOrderBy(), rentSearch.getOrderDirection());
+        int page = rentSearch.getStart() / rentSearch.getSize();
+        Pageable pageable = PageRequest.of(page, rentSearch.getSize(), sort);
+
+        Specification<House> specification = (root, query, cb) -> {
+            Predicate predicate = cb.equal(root.get("adminId"), UserLoginUtil.getLoginUserId());
+            predicate = cb.and(predicate, cb.notEqual(root.get("status"), HouseStatus.PASSES.getValue()));
+
+            if (rentSearch.getCityEnName() != null) {
+                predicate = cb.and(predicate, cb.equal(root.get("cityEnName"), rentSearch.getCityEnName()));
+            }
+
+
+          /*  if (rentSearch.getRoom() != 0) {
+                predicate = cb.and(predicate, cb.greaterThanOrEqualTo(root.get("room"), rentSearch.getRoom()));
+            }
+
+            if (rentSearch.getSize() != 0) {
+                predicate = cb.and(predicate, cb.lessThanOrEqualTo(root.get("area"), rentSearch.getSize()));
+            }*/
+
+            if (HouseSort.DISTANCE_TO_SUBWAY_KEY.equals(rentSearch.getOrderBy())) {
+                predicate = cb.and(predicate, cb.gt(root.get(HouseSort.DISTANCE_TO_SUBWAY_KEY), -1));
+            }
+            return predicate;
+        };
+        Page<House> houses = houseRepository.findAll(specification, pageable);
+
+        List<HouseDTO> houseDTOS = new ArrayList<>();
+        List<Long> houseIds = new ArrayList<>();
+        Map<Long, HouseDTO> idToHouseMap = Maps.newHashMap();
+        houses.forEach(house -> {
+                    HouseDTO houseDTO = modelMapper.map(house, HouseDTO.class);
+                    houseDTO.setCover(this.cdnPrefix + house.getCover());
+                    houseDTOS.add(houseDTO);
+                    houseIds.add(house.getId());
+                    idToHouseMap.put(house.getId(), houseDTO);
+                }
+
+        );
+
+        wrapperHouseDetails(houseIds, idToHouseMap);
+        return new ServiceMultiResult<>(houses.getTotalElements(), houseDTOS);
+    }
+
+    /**
+     * 包装house详细信息
+     *
+     * @param houseIds
+     * @param idToHouseMap
+     */
+    private void wrapperHouseDetails(List<Long> houseIds, Map<Long, HouseDTO> idToHouseMap) {
+        List<HouseDetail> houseDetails = houseDetailRepository.findByHouseIdIn(houseIds);
+
+        houseDetails.forEach(detail -> {
+            HouseDTO houseDTO = idToHouseMap.get(detail.getHouseId());
+            houseDTO.setHouseDetail(modelMapper.map(detail, HouseDetailDTO.class));
+        });
+        List<HouseTag> houseTags = houseTagRepository.findAllByHouseIdIn(houseIds);
+        houseTags.forEach(houseTag -> {
+            HouseDTO houseDTO = idToHouseMap.get(houseTag.getHouseId());
+            houseDTO.getTags().add(houseTag.getName());
+        });
+    }
 }

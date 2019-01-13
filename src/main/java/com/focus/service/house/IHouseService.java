@@ -5,6 +5,7 @@ import com.focus.service.ServiceResult;
 import com.focus.web.dto.HouseDTO;
 import com.focus.web.form.DataTableSearch;
 import com.focus.web.form.HouseForm;
+import com.focus.web.form.RentSearch;
 
 /**
  * @Description：
@@ -77,4 +78,12 @@ public interface IHouseService {
      * @return
      */
     ServiceResult removeHouseTag(Long houseId, String  tag);
+
+    /**
+     * 通过条件查询房源列表
+     * @param rentSearch
+     * @return
+     */
+    ServiceMultiResult<HouseDTO> query(RentSearch rentSearch);
+
 }

@@ -64,4 +64,11 @@ public interface IAddressService {
      * @return
      */
     ServiceResult<SubwayStationDTO> findSubwayStation(Long subwayStationId);
+
+    /**
+     * 根据编号查找地区
+     * @param cityEnName
+     * @return
+     */
+    ServiceResult<SupportAddressDTO> findCity(String cityEnName);
 }
