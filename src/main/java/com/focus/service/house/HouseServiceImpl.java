@@ -16,12 +16,12 @@ import com.focus.web.form.HouseForm;
 import com.focus.web.form.PhotoForm;
 import com.focus.web.form.RentSearch;
 import com.google.common.collect.Maps;
-import com.qiniu.common.QiniuException;
-import com.qiniu.http.Response;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,10 +67,6 @@ public class HouseServiceImpl implements IHouseService {
     @Autowired
     private ModelMapper modelMapper;
 
-    @Value("${qiniu.cdn.prefix}")
-    private String cdnPrefix;
-
-
     @Override
     @Transactional
     public ServiceResult<HouseDTO> save(HouseForm houseForm) {
@@ -100,7 +96,7 @@ public class HouseServiceImpl implements IHouseService {
         houseDTO.setPictures(pictureDTOS);
         houseDTO.setHouseDetail(houseDetailDTO);
 
-        houseDTO.setCover(this.cdnPrefix + houseDTO.getCover());
+        houseDTO.setCover(houseDTO.getCover());
 
         List<String> tags = houseForm.getTags();
         List<HouseTag> houseTags = new ArrayList<>();
@@ -151,7 +147,7 @@ public class HouseServiceImpl implements IHouseService {
         Page<House> houses = houseRepository.findAll(specification, pageable);
         houses.forEach(house -> {
             HouseDTO houseDTO = modelMapper.map(house, HouseDTO.class);
-            houseDTO.setCover(this.cdnPrefix + house.getCover());
+            houseDTO.setCover( house.getCover());
             houseDTOS.add(houseDTO);
         });
 
@@ -264,7 +260,7 @@ public class HouseServiceImpl implements IHouseService {
         if (picture == null) {
             return ServiceResult.notFound();
         }
-        houseRepository.updateCover(targetId, picture.getPath());
+        houseRepository.updateCover(targetId, picture.getFileUrl());
         return new ServiceResult(true);
     }
 
@@ -317,7 +313,6 @@ public class HouseServiceImpl implements IHouseService {
         photos.forEach(photo -> {
             HousePicture picture = modelMapper.map(photo, HousePicture.class);
             picture.setHouseId(houseId);
-            picture.setCdnPrefix(cdnPrefix);
             housePictures.add(picture);
         });
         return housePictures;
@@ -392,7 +387,7 @@ public class HouseServiceImpl implements IHouseService {
         Map<Long, HouseDTO> idToHouseMap = Maps.newHashMap();
         houses.forEach(house -> {
                     HouseDTO houseDTO = modelMapper.map(house, HouseDTO.class);
-                    houseDTO.setCover(this.cdnPrefix + house.getCover());
+                    houseDTO.setCover(house.getCover());
                     houseDTOS.add(houseDTO);
                     houseIds.add(house.getId());
                     idToHouseMap.put(house.getId(), houseDTO);

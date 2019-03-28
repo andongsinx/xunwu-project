@@ -207,8 +207,8 @@
                 <label class="form-label col-xs-4 col-sm-2" style="width: 18%">已上传图片：</label>
                 <div class="uploaded-list-container ">
                     <tr th:each="picture: ${house.pictures}">
-                        <a th:href="${picture.cdnPrefix} + ${picture.path}">
-                            <img th:src="${picture.cdnPrefix} + ${picture.path}" width="150" height="100">
+                        <a th:href="${picture.fileUrl}">
+                            <img th:src="${picture.fileUrl}" width="150" height="100">
                             <input type="hidden" th:value="${picture.id}">
                         </a>
                     </tr>

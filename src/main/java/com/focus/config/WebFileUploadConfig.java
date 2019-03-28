@@ -1,10 +1,6 @@
 package com.focus.config;
 
-import com.google.gson.Gson;
-import com.qiniu.common.Zone;
-import com.qiniu.storage.BucketManager;
-import com.qiniu.storage.UploadManager;
-import com.qiniu.util.Auth;
+import com.aliyun.oss.OSSClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -56,46 +52,21 @@ public class WebFileUploadConfig {
         return multipartResolver;
     }
 
-    /**
-     * 华东机房
-     */
-    @Bean
-    public com.qiniu.storage.Configuration qiniuConfig() {
-        return new com.qiniu.storage.Configuration(Zone.zone0());
-    }
+    @Value("${aliyun.oss.endpoint}")
+    private String endpoint;
 
-    /**
-     * 构建一个七牛上传工具实例
-     */
-    @Bean
-    public UploadManager uploadManager() {
-        return new UploadManager(qiniuConfig());
-    }
-
-    @Value("${qiniu.AccessKey}")
+    @Value("${aliyun.oss.accessKeyId}")
     private String accessKey;
-    @Value("${qiniu.SecretKey}")
+    @Value("${aliyun.oss.accessKeySecret}")
     private String secretKey;
 
-    /**
-     * 认证信息实例
-     * @return
-     */
     @Bean
-    public Auth auth() {
-        return Auth.create(accessKey, secretKey);
+    public OSSClient ossClient(){
+        OSSClient ossClient = new OSSClient(endpoint,accessKey,secretKey);
+        return ossClient;
     }
 
-    /**
-     * 构建七牛空间管理实例
-     */
-    @Bean
-    public BucketManager bucketManager() {
-        return new BucketManager(auth(), qiniuConfig());
-    }
 
-    @Bean
-    public Gson gson() {
-        return new Gson();
-    }
+
+
 }

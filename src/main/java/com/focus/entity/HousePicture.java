@@ -20,16 +20,18 @@ public class HousePicture {
     @Column(name = "house_id")
     private Long houseId;
 
-    private String path;
 
-    @Column(name = "cdn_prefix")
-    private String cdnPrefix;
+    @Column(name = "file_url")
+    private String fileUrl;
 
     private int width;
 
     private int height;
 
     private String location;
+
+    @Column(name = "file_key")
+    private String fileKey;
 
     public Long getId() {
         return id;
@@ -47,20 +49,21 @@ public class HousePicture {
         this.houseId = houseId;
     }
 
-    public String getPath() {
-        return path;
+
+    public String getFileUrl() {
+        return fileUrl;
     }
 
-    public void setPath(String path) {
-        this.path = path;
+    public void setFileUrl(String fileUrl) {
+        this.fileUrl = fileUrl;
     }
 
-    public String getCdnPrefix() {
-        return cdnPrefix;
+    public String getFileKey() {
+        return fileKey;
     }
 
-    public void setCdnPrefix(String cdnPrefix) {
-        this.cdnPrefix = cdnPrefix;
+    public void setFileKey(String fileKey) {
+        this.fileKey = fileKey;
     }
 
     public int getWidth() {

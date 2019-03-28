@@ -1,19 +1,19 @@
 package com.focus.service.file;
 
+import com.aliyun.oss.HttpMethod;
+import com.aliyun.oss.OSSClient;
 import com.focus.base.ApiResponse;
-import com.qiniu.common.QiniuException;
-import com.qiniu.http.Response;
-import com.qiniu.storage.BucketManager;
-import com.qiniu.storage.UploadManager;
-import com.qiniu.util.Auth;
-import com.qiniu.util.StringMap;
-import org.springframework.beans.factory.InitializingBean;
+import com.focus.base.FilePathHelper;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.DigestUtils;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.Date;
+import java.util.UUID;
 
 /**
  * @Description： 文件操作
@@ -21,70 +21,68 @@ import java.io.InputStream;
  * @Date: create in 15:21 2019/1/5
  */
 @Service
-public class FileServiceImpl implements IFileService, InitializingBean {
+public class FileServiceImpl implements IFileService {
 
-    @Autowired
-    private UploadManager uploadManager;
 
-    @Autowired
-    private BucketManager bucketManager;
-
-    @Autowired
-    private Auth auth;
-
-    @Value("${qiniu.Bucket}")
+    @Value("${aliyun.oss.bucketName}")
     private String bucket;
 
-    private StringMap putPolicy;
+    @Autowired
+    private OSSClient ossClient;
+
 
     @Override
-    public Response uploadFile(File file) throws QiniuException {
-        Response response = this.uploadManager.put(file, null, getUploadToken());
+    public ApiResponse uploadFile(File file) {
+        String fileName = generateFileKey(file.getName());
+        if (StringUtils.isBlank(fileName)) {
+            return ApiResponse.ofStatus(ApiResponse.Status.FILE_ERROR);
+        }
+        this.ossClient.putObject(bucket, fileName, file);
+        String url = ossClient.generatePresignedUrl(bucket, fileName, expireTime(), HttpMethod.GET).toString();
         int retry = 0;
-        while (response.needRetry() && retry < 3) {
-            response = this.uploadManager.put(file, null, getUploadToken());
+        while (StringUtils.isBlank(url) && retry < 3) {
+            this.ossClient.putObject(bucket, generateFileKey(fileName), file).getResponse();
+            url = ossClient.generatePresignedUrl(bucket, fileName, expireTime(), HttpMethod.GET).toString();
             retry++;
         }
-        return response;
+        return ApiResponse.ofSuccess(url);
     }
 
     @Override
-    public Response uploadFile(InputStream inputStream) throws QiniuException {
-        Response response = this.uploadManager.put(inputStream, null, getUploadToken(), null, null);
+    public ApiResponse uploadFile(InputStream inputStream, String originalFileName) {
+        String fileName = generateFileKey(originalFileName);
+        if (StringUtils.isBlank(fileName)) {
+            return ApiResponse.ofStatus(ApiResponse.Status.FILE_ERROR);
+        }
+        this.ossClient.putObject(bucket, fileName, inputStream);
+        String url = ossClient.generatePresignedUrl(bucket, fileName, expireTime(), HttpMethod.GET).toString();
         int retry = 0;
-        while (response.needRetry() && retry < 3) {
-            response = this.uploadManager.put(inputStream, null, getUploadToken(), null, null);
+        while (StringUtils.isBlank(url) && retry < 3) {
+            this.ossClient.putObject(bucket, generateFileKey(fileName), inputStream).getResponse();
+            url = ossClient.generatePresignedUrl(bucket, fileName, expireTime(), HttpMethod.GET).toString();
             retry++;
         }
-        return response;
+        return ApiResponse.ofSuccess(url);
     }
 
+
     @Override
-    public Response deleteFile(String key) throws QiniuException {
-        Response response = this.bucketManager.delete(bucket, key);
-        int reTry = 0;
-        while (response.needRetry() && reTry < 3) {
-            response = this.bucketManager.delete(bucket, key);
-            reTry++;
+    public boolean deleteFile(String key) {
+        this.ossClient.deleteObject(bucket, key);
+        return true;
+    }
+
+    private String generateFileKey(String originalFileName) {
+        if (!StringUtils.isNotBlank(originalFileName)) {
+            return null;
         }
-        return response;
+        String suffix = FilePathHelper.parseFileExtension(originalFileName);
+        return DigestUtils.md5DigestAsHex(UUID.randomUUID().toString().getBytes()).substring(0, 8) + new Date().getTime()+"."+suffix;
     }
 
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        this.putPolicy = new StringMap();
-        putPolicy.put("returnBody", "{\"key\":\"$(key)\",\"hash\":\"$(etag)\",\"bucket\":\"$(bucket)\",\"width\":$(imageInfo.width), \"height\":${imageInfo.height}}");
+    private Date expireTime() {
+        return new Date(System.currentTimeMillis() + 24 * 1000 * 3600 * 360);
     }
 
-
-    /**
-     * 获取认证token
-     *
-     * @return
-     */
-    private String getUploadToken() {
-        return this.auth.uploadToken(bucket, null, 3600, putPolicy);
-    }
 
 }

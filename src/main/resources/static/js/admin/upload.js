@@ -536,22 +536,18 @@
 
         uploader.onUploadSuccess = function (file, response) {
             // 自定义上传成功处理逻辑
-            var photo_path = response.data.key,
-                photo_width = response.data.width,
-                photo_height = response.data.height,
+            var photo_key = response.data.fileKey,
+                photo_url = response.data.fileUrl,
                 $photo_container = $('.upload-photo-ids-container');
-            $photo_container.off().append('<input type="hidden" name="photos[' + photo_sequence + '].path" value="' +
-                photo_path + '" />').append('<input type="hidden" name="photos[' + photo_sequence + '].width" value="' +
-                photo_width + '"/>').append('<input type="hidden" name="photos[' + photo_sequence + '].height" value="' +
-                photo_height + '"/>');
-
+            $photo_container.off().append('<input type="hidden" name="photos[' + photo_sequence + '].fileKey" value="' +
+                photo_key + '" />').append('<input type="hidden" name="photos[' + photo_sequence + '].fileUrl" value="' +
+                photo_url + '"/>')
             $("#upload-cover-container").append(
                 '<div style="float: left; margin: 2px; padding: 2px; border: 1px dashed; width:' +
                 ' 120px; height: 100px;">' +
-                '<span><img src="http://pkunw9zgr.bkt.clouddn.com/' +
-                photo_path + '?imageView2/1/w/100/h/100" title="待选封面" />' +
+                '<span><img height="100" width="100" src="'+photo_url+'" title="待选封面" />' +
                 '<input style="margin-left: 5px;" type="radio" name="cover" value="' +
-                photo_path + '"/></span></div>'
+                photo_url + '"/></span></div>'
             );
 
             $("#upload-cover-container .cover-desc").css('display', 'none');

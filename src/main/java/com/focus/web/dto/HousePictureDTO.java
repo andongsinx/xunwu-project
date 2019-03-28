@@ -14,10 +14,11 @@ public class HousePictureDTO {
     @JsonProperty(value = "house_id")
     private Long houseId;
 
-    private String path;
+    @JsonProperty(value = "file_url")
+    private String fileUrl;
 
-    @JsonProperty(value = "cdn_prefix")
-    private String cdnPrefix;
+    @JsonProperty(value = "file_key")
+    private String fileKey;
 
     private int width;
 
@@ -39,20 +40,20 @@ public class HousePictureDTO {
         this.houseId = houseId;
     }
 
-    public String getPath() {
-        return path;
+    public String getFileUrl() {
+        return fileUrl;
     }
 
-    public void setPath(String path) {
-        this.path = path;
+    public void setFileUrl(String fileUrl) {
+        this.fileUrl = fileUrl;
     }
 
-    public String getCdnPrefix() {
-        return cdnPrefix;
+    public String getFileKey() {
+        return fileKey;
     }
 
-    public void setCdnPrefix(String cdnPrefix) {
-        this.cdnPrefix = cdnPrefix;
+    public void setFileKey(String fileKey) {
+        this.fileKey = fileKey;
     }
 
     public int getWidth() {
@@ -76,8 +77,8 @@ public class HousePictureDTO {
         return "HousePictureDTO{" +
                 "id=" + id +
                 ", houseId=" + houseId +
-                ", path='" + path + '\'' +
-                ", cdnPrefix='" + cdnPrefix + '\'' +
+                ", fileUrl='" + fileUrl + '\'' +
+                ", fileKey='" + fileKey + '\'' +
                 ", width=" + width +
                 ", height=" + height +
                 '}';

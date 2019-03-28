@@ -7,18 +7,28 @@ package com.focus.web.form;
  */
 public class PhotoForm {
 
-    private String path;
+    private String fileUrl;
+
+    private String fileKey;
 
     private int width;
 
     private int height;
 
-    public String getPath() {
-        return path;
+    public String getFileUrl() {
+        return fileUrl;
     }
 
-    public void setPath(String path) {
-        this.path = path;
+    public void setFileUrl(String fileUrl) {
+        this.fileUrl = fileUrl;
+    }
+
+    public String getFileKey() {
+        return fileKey;
+    }
+
+    public void setFileKey(String fileKey) {
+        this.fileKey = fileKey;
     }
 
     public int getWidth() {

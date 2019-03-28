@@ -72,7 +72,8 @@ public class ApiResponse {
         INTERNAL_SERVER_ERROR(500, "Unknown Internal Error"),
         NOT_VALID_PARAM(40005, "Not valid Params"),
         NOT_SUPPORTED_OPERATION(40006, "Operation not supported"),
-        NOT_LOGIN(50000, "Not Login");
+        NOT_LOGIN(50000, "Not Login"),
+        FILE_ERROR(60000,"File Upload Error");
 
         private int code;
         private String standardMessage;

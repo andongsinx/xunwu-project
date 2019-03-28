@@ -79,8 +79,8 @@ var table = $('#data-table').DataTable({
     }, {
         targets: 2,
         render: function (data, type, row, meta) {
-            return '<td><img onClick="house_edit(\'查看\', \'/admin/house/show?id=' + row.id + '\')" title="查看"' +
-                ' class="picture-thumb" src="' + data + '?imageView2/1/w/200/h/100"></td>';
+            return '<td><img height="100" width="100" onClick="house_edit(\'查看\', \'/admin/house/show?id=' + row.id + '\')" title="查看"' +
+                ' class="picture-thumb" src="' + data + '"></td>';
         }
     }, {
         targets: 7,

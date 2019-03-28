@@ -2,21 +2,17 @@ package com.focus.web.admin;
 
 import com.focus.base.ApiDataTableResponse;
 import com.focus.base.ApiResponse;
-import com.focus.entity.HouseDetail;
-import com.focus.entity.Subway;
-import com.focus.service.ServiceMultiResult;
-import com.focus.web.form.DataTableSearch;
+import com.focus.base.FilePathHelper;
 import com.focus.entity.SupportAddress;
+import com.focus.service.ServiceMultiResult;
 import com.focus.service.ServiceResult;
 import com.focus.service.file.IFileService;
 import com.focus.service.house.IAddressService;
 import com.focus.service.house.IHouseService;
 import com.focus.web.dto.*;
+import com.focus.web.form.DataTableSearch;
 import com.focus.web.form.HouseForm;
 import com.google.gson.Gson;
-import com.qiniu.common.QiniuException;
-import com.qiniu.http.Response;
-import org.apache.kafka.common.requests.ApiError;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -28,8 +24,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
-import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -108,27 +104,16 @@ public class AdminController {
         if (file.isEmpty()) {
             return ApiResponse.ofStatus(ApiResponse.Status.NOT_VALID_PARAM);
         }
-        String filename = file.getOriginalFilename();
-        InputStream is = null;
-        Response response = null;
+        String orginalFileName = file.getOriginalFilename();
         try {
-            is = file.getInputStream();
-            response = fileService.uploadFile(is);
-            if (response.isOK()) {
-                QiNiuPutRet ret = gson.fromJson(response.bodyString(), QiNiuPutRet.class);
-                return ApiResponse.ofSuccess(ret);
-            }
-            return ApiResponse.ofMessage(response.statusCode, response.getInfo());
-
-        } catch (QiniuException e) {
-            response = e.response;
-            try {
-                return ApiResponse.ofMessage(response.statusCode, response.bodyString());
-            } catch (QiniuException e1) {
-                e1.printStackTrace();
-                return ApiResponse.ofStatus(ApiResponse.Status.INTERNAL_SERVER_ERROR);
-            }
-        } catch (IOException e) {
+            InputStream is = file.getInputStream();
+            ApiResponse response = fileService.uploadFile(is, orginalFileName);
+            Map<String, Object> data = new HashMap<>();
+            data.put("fileKey", FilePathHelper.parseFileName(response.getData().toString()));
+            data.put("fileUrl", response.getData().toString());
+            response.setData(data);
+            return response;
+        } catch (Exception e) {
             return ApiResponse.ofStatus(ApiResponse.Status.INTERNAL_SERVER_ERROR);
         }
     }

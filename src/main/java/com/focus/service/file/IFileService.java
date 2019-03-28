@@ -1,7 +1,7 @@
 package com.focus.service.file;
 
-import com.qiniu.common.QiniuException;
-import com.qiniu.http.Response;
+import com.aliyun.oss.OSSException;
+import com.focus.base.ApiResponse;
 
 import java.io.File;
 import java.io.InputStream;
@@ -20,7 +20,7 @@ public interface IFileService {
      * @param file
      * @return
      */
-    Response uploadFile(File file) throws QiniuException;
+    ApiResponse uploadFile(File file) throws OSSException;
 
     /**
      * 通过流上传
@@ -28,15 +28,15 @@ public interface IFileService {
      * @param inputStream
      * @return
      */
-    Response uploadFile(InputStream inputStream) throws QiniuException;
+    ApiResponse uploadFile(InputStream inputStream,String originalFileName) throws OSSException;
 
     /**
      * 删除文件
      * @param key
      * @return
-     * @throws QiniuException
+     * @throws
      */
-    Response deleteFile(String key) throws QiniuException;
+    boolean deleteFile(String key) throws OSSException;
 
 
 }
